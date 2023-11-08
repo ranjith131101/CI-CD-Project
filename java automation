@@ -1,0 +1,108 @@
+Creating a CI and CD (end to end )pipeline with tom cat deploying java file(.war)
+
+
+create 3 servers and 
+create a ecr repo
+
+
+
+
+#Developer server
+sudo su -
+yum update -y
+yum install vim -y
+yum install maven -y
+vim /etc/ssh/sshd_config
+systemctl start sshd
+systemctl enable sshd
+systemctl status sshd
+passwd root
+yum install git -y
+ssh-keygen
+##copy the key and paste in your github sshkey so that developer server and your github will communicate
+git clone paste your github repo's ssh link
+
+
+#jenkins server
+sudo su -
+yum update -y
+yum install vim -y
+yum install maven -y
+vim /etc/ssh/sshd_config
+systemctl start sshd
+systemctl enable sshd
+systemctl status sshd
+passwd root
+sudo wget -O /etc/yum.repos.d/jenkins.repo \
+    https://pkg.jenkins.io/redhat-stable/jenkins.repo
+sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+sudo yum upgrade
+# Add required dependencies for the jenkins package
+sudo yum install fontconfig java-17-openjdk
+sudo yum install jenkins
+sudo systemctl daemon-reload
+sudo systemctl enable jenkins
+sudo systemctl start jenkins
+##copy your jenkins public ip address with :8080 eg (108:101:1010:8080) and paste the command with cat command
+config the jenkins
+ #go to manage jenkins in ssh server
+name - ansible
+hostname - docker private ip
+username - root
+set the password
+#create a job install plugins like maven intergration ,git ,publish over ssh
+go to config
+# add git repo
+# select artifact - **/*.war
+# publish over ssh - source file - **/*.war - excute file - /root/sourcecode/docker.sh
+
+#docker server
+sudo su -
+yum update -y
+yum install vim -y
+yum install maven -y
+vim /etc/ssh/sshd_config
+systemctl start sshd
+systemctl enable sshd
+systemctl status sshd
+passwd root
+sudo yum install -y yum-utils
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+sudo yum install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo systemctl start docker
+# create a mkdir as sourcecode go in and create vim folder as docker.sh 
+in docker file
+in docker.sh
+ 
+#! /bin/bash
+ 
+ 
+cd ~
+aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin <Your code>
+docker build -t <Your code>
+docker tag tomcat-container:latest public.ecr.aws/<your code>
+docker push public.ecr.aws/f0o4n0i3/<Your code>
+
+#create a dockerfile to pull the tomcat server
+In dockerfile
+ 
+FROM tomcat:latest
+ 
+ADD ./target/hello.war /usr/local/tomcat/webapps/
+ 
+EXPOSE 8080
+ 
+CMD ["catalina.sh", "run"]
+
+chmod +x ./sourcecode
+/root/sourcecode/docker.sh
+
+go to jenkins it should bulid and check in ecr repo the img is created
+
+edit the java file 
+ 
+create the ecs and the following steps
+Clusters
+Namespaces
+Task definitions
+ after the copy the ecs img path and paste in the url the addition of any words must be automatically bulid in the jenkins and it can be seen in  this img url
